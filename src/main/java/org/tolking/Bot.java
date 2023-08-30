@@ -32,6 +32,7 @@ public final class Bot {
     private static final String HASH_CODE = config.getProperty("api_hash");
     private static final String PHONE_NUMBER = config.getProperty("phone_number");
     private static final long USER_ID = Long.parseLong(config.getProperty("user_id"));
+    private static final long ADMIN_ID = Long.parseLong(config.getProperty("admin_id"));
     private static SimpleTelegramClient client;
 
     public static void main(String[] args) throws Exception {
@@ -69,7 +70,7 @@ public final class Bot {
     }
 
     private static boolean isAdmin(MessageSender sender) {
-        return sender instanceof MessageSenderUser && ((MessageSenderUser) sender).userId == 123214;
+        return sender instanceof MessageSenderUser && ((MessageSenderUser) sender).userId == ADMIN_ID;
     }
 
     private static void onUpdateAuthorizationState(UpdateAuthorizationState update) {
