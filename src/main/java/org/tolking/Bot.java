@@ -6,6 +6,7 @@ import it.tdlight.client.TDLibSettings;
 import it.tdlight.Init;
 import it.tdlight.jni.TdApi;
 import it.tdlight.jni.TdApi.*;
+
 import java.io.*;
 import java.net.*;
 import java.nio.file.*;
@@ -22,7 +23,6 @@ public final class Bot {
             properties.load(fileInputStream);
         } catch (IOException e) {
             System.out.println("Config.properties file load error.");
-            e.printStackTrace();
             System.exit(1);
         }
         return properties;
@@ -75,7 +75,11 @@ public final class Bot {
 
     private static void onUpdateAuthorizationState(UpdateAuthorizationState update) {
         AuthorizationState authorizationState = update.authorizationState;
-        String state = authorizationState.toString();
+        String state = "";
+        if (authorizationState instanceof AuthorizationStateReady) state = "Logged in";
+        else if (authorizationState instanceof AuthorizationStateClosing) state = "Closing...";
+        else if (authorizationState instanceof AuthorizationStateClosed) state = "Closed";
+        else if (authorizationState instanceof AuthorizationStateLoggingOut) state = "Logging out...";
         System.out.println(state);
     }
 
@@ -93,8 +97,55 @@ public final class Bot {
             long chatId = update.message.chatId;
             long replyToMessageId = update.message.replyToMessageId;
 
+            System.out.println(text);
+
+            // If message start witch "check"
+            if (replyToMessageId != 0 && text.trim().startsWith("check")) {
+                final Photo[] photo = new Photo[1];
+                // Retrieve the replied message by its replyMessageID
+                TdApi.GetMessage getMessage = new TdApi.GetMessage(update.message.chatId, replyToMessageId);
+                client.send(getMessage, repliedMessage -> {
+                    if (repliedMessage.get().content instanceof TdApi.MessagePhoto messagePhoto && repliedMessage != null) {
+                        photo[0] = messagePhoto.photo;
+                        if (photo[0] != null) {
+                            int id = getLargestPhotoSize(photo[0]).photo.id;
+                            var request = new DownloadFile(id, 32, 0, 0, true);
+                            client.send(request, result -> {
+                                try {
+                                    deleteMessage(chatId, msgId);
+                                    String path = result.get().local.path;
+                                    String resultText = TextAnalysis.imageToText(path);
+
+                                    InputMessageText textContent = new InputMessageText();
+                                    textContent.text = new TdApi.FormattedText((resultText.isEmpty() ? "\uD83E\uDD16: I couldn't detect image" : resultText), null);
+                                    System.out.println(path);
+                                    TdApi.SendMessage textReq = new TdApi.SendMessage();
+                                    textReq.replyToMessageId = message.replyToMessageId;
+                                    textReq.chatId = message.chatId;
+                                    textReq.inputMessageContent = textContent;
+                                    client.send(textReq, videoResponse -> {
+                                        // Handle the response if needed
+                                    });
+                                } catch (Exception e) {
+                                    throw new RuntimeException(e);
+                                }
+                            });
+                        }
+                    }
+                });
+
+
+            }
+            // If text starts with $
+            else if (text.charAt(0) == '$') {
+                try {
+                    animText(text, msgId, chatId);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            }
             //if text is YouTube link
-            if (matchesPattern(text, linkRegex) && senderUserId == USER_ID) {
+            else if (matchesPattern(text, linkRegex) && senderUserId == USER_ID) {
                 Youtube youtube = new Youtube();
                 String id = matchesPattern(text, shortsRegex) ? youtube.getShortsId(text) : youtube.getVidId(text);
                 try {
@@ -154,13 +205,7 @@ public final class Bot {
                 }
             }
             //If you want to animate text
-            if (text.charAt(0) == '$') {
-                try {
-                    animText(text, msgId, chatId);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
-            }
+
         }
     }
 
@@ -170,6 +215,7 @@ public final class Bot {
         Path downloadedVideoPath = downloadVideo(videoUrl);
         sendFileMessage(message, downloadedVideoPath);
     }
+
     //Delete message
     private static void deleteMessage(long chatId, long messageId) {
         TdApi.DeleteMessages request = new TdApi.DeleteMessages(chatId, new long[]{messageId}, true);
@@ -244,5 +290,15 @@ public final class Bot {
         Pattern regex = Pattern.compile(pattern);
         Matcher matcher = regex.matcher(text);
         return matcher.matches();
+    }
+
+    private static TdApi.PhotoSize getLargestPhotoSize(TdApi.Photo photo) {
+        TdApi.PhotoSize largestSize = null;
+        for (TdApi.PhotoSize size : photo.sizes) {
+            if (largestSize == null || size.width > largestSize.width) {
+                largestSize = size;
+            }
+        }
+        return largestSize;
     }
 }
