@@ -21,8 +21,8 @@ This Java Telegram User Bot is a versatile and customizable bot designed for use
 
 - To stop the bot, send the `/stop` command (only allowed for administrators) in telegram.
 - To animate text, start your message with '$' in telegram.
-- To download youtube videos just paste link in telegram.
-- To get text of the image by sending "check" with replay to wanted image
+- To download youtube videos, just paste link in telegram.
+- To get text of the image,send text "check" with replay to wanted image
 
 ## Configuration
 
