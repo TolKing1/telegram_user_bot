@@ -1,7 +1,5 @@
 package org.tolking;
 
-
-
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -14,41 +12,27 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class Youtube {
-    public Youtube() {
-    }
-//    public  static void main(String[] args) throws IOException, InterruptedException {
-//        getUrl();
-//
-//    }
+    public static final String apiKey = ""; // TODO: Replace with your API key from https://rapidapi.com/ytjar/api/ytstream-download-youtube-videos
     public String getUrl(String id) throws IOException, InterruptedException {
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create("https://ytstream-download-youtube-videos.p.rapidapi.com/dl?id="+id))
-                .header("X-RapidAPI-Key", "97a6b739d4mshb22011e57b5efb1p189fa9jsn1f746cfc6bae")
-                .header("X-RapidAPI-Host", "ytstream-download-youtube-videos.p.rapidapi.com")
-                .method("GET", HttpRequest.BodyPublishers.noBody())
-                .build();
-        HttpResponse<String> response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
+        HttpResponse<String> response = HttpClient.newHttpClient()
+                .send(HttpRequest.newBuilder()
+                        .uri(URI.create("https://ytstream-download-youtube-videos.p.rapidapi.com/dl?id=" + id))
+                        .header("X-RapidAPI-Key", apiKey)
+                        .header("X-RapidAPI-Host", "ytstream-download-youtube-videos.p.rapidapi.com")
+                        .method("GET", HttpRequest.BodyPublishers.noBody())
+                        .build(), HttpResponse.BodyHandlers.ofString());
+
         JSONArray formats = new JSONObject(response.body()).getJSONArray("formats");
-        String link = formats.getJSONObject(formats.length()-1).getString("url");
-        return link;
-
-    }
-    public String getShortsId(String link){
-        Pattern pattern = Pattern.compile("/shorts/([A-Za-z0-9_-]+)");
-        Matcher matcher = pattern.matcher(link);
-        if (matcher.find()) {
-            return matcher.group(1);
-        }else return "SXHMnicI6Pg";
-
-    }
-    public String getVidId(String link){
-        Pattern pattern = Pattern.compile("(?:v=|youtu\\.be\\/)([A-Za-z0-9_-]+)");
-        Matcher matcher = pattern.matcher(link);
-        if (matcher.find()) {
-            return matcher.group(1);
-        }else return "SXHMnicI6Pg";
-
+        return formats.getJSONObject(formats.length() - 1).getString("url");
     }
 
+    public String getShortsId(String link) {
+        Matcher matcher = Pattern.compile("/shorts/([A-Za-z0-9_-]+)").matcher(link);
+        return matcher.find() ? matcher.group(1) : "SXHMnicI6Pg";
+    }
 
+    public String getVidId(String link) {
+        Matcher matcher = Pattern.compile("(?:v=|youtu\\.be\\/)([A-Za-z0-9_-]+)").matcher(link);
+        return matcher.find() ? matcher.group(1) : "SXHMnicI6Pg";
+    }
 }
