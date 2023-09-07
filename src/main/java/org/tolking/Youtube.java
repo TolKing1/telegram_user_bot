@@ -26,7 +26,7 @@ import java.util.regex.Pattern;
 import static org.tolking.Bot.*;
 
 public class Youtube {
-    public static final String apiKey = ""; // TODO: Replace with your API key from https://rapidapi.com/ytjar/api/ytstream-download-youtube-videos
+    public static final String apiKey = config.getProperty("youtubeKey");
     public static int width;
     public static int height;
 
@@ -118,7 +118,7 @@ public class Youtube {
     }
 
     private static Path downloadVideo(String videoUrl) throws IOException {
-        String filename = UUID.randomUUID().toString() + ".mp4";
+        String filename = UUID.randomUUID() + ".mp4";
         Path downloadDirectory = Paths.get("downloaded_videos");
         if (!Files.exists(downloadDirectory)) {
             Files.createDirectories(downloadDirectory);
@@ -137,6 +137,7 @@ public class Youtube {
         inputVideo.video = new TdApi.InputFileLocal(filePath.toString());
         inputVideo.width = width;
         inputVideo.height = height;
+        inputVideo.supportsStreaming = true;
 
         TdApi.SendMessage videoMessageRequest = new TdApi.SendMessage();
         videoMessageRequest.replyToMessageId = message.replyToMessageId;
@@ -166,7 +167,7 @@ public class Youtube {
     }
 
     public static String getVidId(String link) {
-        Matcher matcher = Pattern.compile("(?:v=|youtu\\.be\\/)([A-Za-z0-9_-]+)").matcher(link);
+        Matcher matcher = Pattern.compile("(?:v=|youtu\\.be/)([A-Za-z0-9_-]+)").matcher(link);
         return matcher.find() ? matcher.group(1) : "SXHMnicI6Pg";
     }
 

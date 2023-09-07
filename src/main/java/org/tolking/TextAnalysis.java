@@ -7,13 +7,16 @@ import javax.net.ssl.HttpsURLConnection;
 import java.io.*;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Iterator;
 
+import static org.tolking.Bot.config;
+
 public class TextAnalysis {
     private static final String OCR_API_URL = "https://api.ocr.space/parse/image";
-    private static final String OCR_API_KEY = ""; // TODO: Replace with your API key from https://ocr.space/OCRAPI
+    private static final String OCR_API_KEY = config.getProperty("OCRKey");
 
     public static String imageToText(String imagePath) throws Exception {
         Path path = Path.of(imagePath);
@@ -21,7 +24,6 @@ public class TextAnalysis {
         String base64Image = java.util.Base64.getEncoder().encodeToString(imageBytes);
         String requestBody = "data:image/jpeg;base64," + base64Image;
         try {
-
             Files.deleteIfExists(path);
             System.out.println("File deleted: " + imagePath);
         } catch (IOException e) {
@@ -74,12 +76,11 @@ public class TextAnalysis {
             JSONObject firstObject = parsedResultsArray.getJSONObject(0);
             return firstObject.getString("ParsedText");
         } catch (Exception e) {
-            e.printStackTrace();
             return response; // Return the full response in case of an error
         }
     }
 
-    private static String getPostDataString(JSONObject params) throws Exception {
+    private static String getPostDataString(JSONObject params) {
         StringBuilder result = new StringBuilder();
         boolean first = true;
         Iterator<String> itr = params.keys();
@@ -91,9 +92,9 @@ public class TextAnalysis {
             if (first) first = false;
             else result.append("&");
 
-            result.append(URLEncoder.encode(key, "UTF-8"));
+            result.append(URLEncoder.encode(key, StandardCharsets.UTF_8));
             result.append("=");
-            result.append(URLEncoder.encode(value.toString(), "UTF-8"));
+            result.append(URLEncoder.encode(value.toString(), StandardCharsets.UTF_8));
         }
         return result.toString();
     }

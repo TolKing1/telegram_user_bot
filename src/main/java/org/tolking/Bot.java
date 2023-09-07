@@ -8,14 +8,12 @@ import it.tdlight.jni.TdApi;
 import it.tdlight.jni.TdApi.*;
 
 import java.io.*;
-import java.net.*;
 import java.nio.file.*;
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.regex.*;
 
 public final class Bot {
-    private static final Properties config = loadConfig();
+    static final Properties config = loadConfig();
 
     private static Properties loadConfig() {
         Properties properties = new Properties();
@@ -94,6 +92,7 @@ public final class Bot {
             long replyToMessageId = update.message.replyToMessageId;
 
             System.out.println(text);
+            System.out.println("-".repeat(text.length()));
 
             // If message start witch "check"
             if (replyToMessageId != 0 && text.trim().startsWith("check")) {
@@ -147,6 +146,7 @@ public final class Bot {
 
         }
     }
+
     static void deleteMessage(long chatId, long messageId) {
         TdApi.DeleteMessages request = new TdApi.DeleteMessages(chatId, new long[]{messageId}, true);
         client.send(request, response -> {
