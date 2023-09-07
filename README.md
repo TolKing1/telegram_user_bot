@@ -27,7 +27,6 @@ This Java Telegram User Bot is a versatile and customizable bot designed for use
 ## Configuration
 
 - API credentials (API ID and API Hash), phone number, and user/administrator IDs can be configured in the `config.properties` file.
-- API keys for YouTube and OCR (check TODO list)
 
 ## Contributing
 
